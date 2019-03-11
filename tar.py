@@ -1,91 +1,171 @@
 from selenium import webdriver
+from selenium.webdriver import Firefox
+from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as expectedCondition
 
-
-import pickle
-
-
 import re
 import time
+import mysql.connector
+from dataB.dbCon import mydb,dBase,dBaseClose
 
+#Pavadinimas - Title
+#Institucijos suteiktas nr. - Authority issued no.
+#Priėmimo data - Date of Admission
+#Įsigaliojimo data - Entry into force
 
+global browser
+global BASE_URL
+global links
+global nomes_lista
+global datas
+
+nomes_lista = []; datas = []; links = [];
+
+BASE_URL = "https://www.e-tar.lt"
+
+headless = Options()
+#headless.add_argument("--headless")
+headless.headless = True
+
+#browser = webdriver.Firefox(options=headless)
 browser = webdriver.Firefox()
 
-browser.get("https://www.e-tar.lt/acc/index.html")
-assert "TAR" in browser.title
+def tarDefault():
+    browser.get("https://www.e-tar.lt/acc/index.html")
+    assert "TAR" in browser.title
+    #Find the search box - Localiza a caixa de pesquisa
+    elem = browser.find_element_by_name("page-index:j_id_v:page-index-search")
 
-# Find the search box
-elem = browser.find_element_by_name("page-index:j_id_v:page-index-search")
+        #Search query - texto da pesquisa
+    elem.send_keys("pilietybę Brazilijoje" + Keys.RETURN)
 
-#query da pesquisa
-elem.send_keys("pilietybę Brazilijoje" + Keys.RETURN)
+        # selenium sleep driverName + time or it waits untill  expected condition is met - Tempo de espera do Selenium Nome do driver+tempo ou espera a condicao ser atendida
+    WebDriverWait(browser, 7).until(expectedCondition.presence_of_element_located((By. XPATH, "//div[@class='table-content-inner']")))
 
-# selenium sleep driverName + time or it will wait untill  expected condition is met
-WebDriverWait(browser, 5).until(expectedCondition.presence_of_element_located((By. XPATH, "//div[@class='table-content-inner']")))
+    #printa NR + data no terminal da pagina mais recente  ex.Lnk + 1V-860 + data YYYY-MM-DD
+    # link | Issued No. | Date
 
-#printa NR + data no terminal da pagina mais recente  ex. 1V-860 + data YYYY-MM-DD
+    WebDriverWait(browser,7 ).until(expectedCondition.presence_of_element_located((By. XPATH, "//div[@class = 'table-row']")))
 
-A=['']; B=['']; C=['']
-for a in browser.find_elements_by_xpath("//div[@class = 'table-row']"):
-#    print(re.search(r'[\d]V-[\d][\d][\d]',a.text).group(0))
-#    print(re.search(r'[\d][\d][\d][\d[\d][-][\d][\d][-][\d][\d]',a.text).group(0))
+    for a in browser.find_elements_by_xpath("//div[@class = 'table-row']"):
+        datas.append( re.search(r'[\d][\d][\d][\d[\d][-][\d][\d][-][\d][\d]',a.text).group(0) )
 
-    A.append( re.search(r'[\d]V-[\d][\d][\d]',a.text).group(0) )
-    B.append( re.search(r'[\d][\d][\d][\d[\d][-][\d][\d][-][\d][\d]',a.text).group(0) )
+    #Localiza links da pagina mais recente
+    for c in browser.find_elements_by_xpath('.//a'):
+        links = re.findall("[^=]+[0-9]+[a-z0-9]*",c.get_attribute('href'))
 
-#printa os links no terminal da pagina mais recente  ex. 1V-860 + data YYYY-MM-DD
+    #Find All links (* element(S) - element get only the first occurrence)
+    #browser.find_element_by_xpath('.//a').click()
 
-for b in browser.find_elements_by_xpath('.//a'):
-#    print(b.get_attribute('href'))
-    C.append( b.get_attribute('href') )
+    raw_data = datas,links
 
-#for B, A,C in zip(A, B, C):
-#    print(A, " | ", B, " - ", C)
-
-#Find All links (* elementS - element get only the first occurrence)
-browser.find_element_by_xpath('.//a').click()
-
-
-#WebDriverWait - espera o carregamento do browser ate  encontrar a TAG iframe
-WebDriverWait(browser, 3).until(expectedCondition.presence_of_element_located((By. TAG_NAME, "iframe")))
-
-#pegar link do iframe
-for lk in browser.find_elements(By.TAG_NAME, "iframe"):
-    iframe = lk.get_attribute('src')
-
-
-#msg=iframe, " | ", A[1], " - ", B[1]
-
-data = iframe,A[1],B[1]
+    return raw_data
 
 
 
-with open("lock.lock", 'w+', encoding='utf-8') as file:
-    file.write(str(data))
+#Get all brazilians names/ Family names from the list | coleta os nomes brasileiros da lista
+def getNomes(links,data):
+
+    for url in links:
+        browser.get(BASE_URL + "/rs/legalact/" + url)
+
+        texto=[];listaBR=[];nomes_tmp=[]
+        for elem in browser.find_elements(By.CLASS_NAME,"MsoNormal"):
+            texto.append( elem.text )
+        i = 0
+        while i < len(texto):
+            if re.search(r'Brazil',texto[i]):
+                listaBR.append( texto[i].split(',') )
+                time.sleep(1)
+            i += 1
+        i=0
+
+        while i < len(listaBR):
+           nomes_tmp.append( listaBR[i][0] )
+#           print( listaBR[i][0].split(',') )
+#           print( nomes_tmp )
+           i += 1
+        nomes_lista.append(nomes_tmp)
+
+    return nomes_lista
 
 
-browser.get(iframe)  # Acessa o link
+def insertDados(link,datas):
+#def insertDados():
+    link = []
+    nomes = []
 
-texto=['']
+    #check last data on db
+    lastDataDB = []
+    lastDataDB = checkDados()
 
-for elem in browser.find_elements(By.CLASS_NAME,"MsoNormal"):
-    #texto.append( re.search(r'Brazil',elem.text) )
-    texto.append( elem.text )
+    print(lastDataDB)
+    nomes = getNomes()
 
-br=[] ; i=0
-while i < len(texto):
-    if re.search(r'Brazil',texto[i]):
-        print(texto[i])
-#    br.append(texto[i])
-        time.sleep(2)
-#    print( str(i) +" - "+ texto[i] )
+    #compare link with the las link on DB | compara link com ultimo link no BD
+#    for x in datas:
+#        if str( lastDataDB ) > str( x ):
+#            continue
+#        else:
+#            link.append( datas.index( x ) )
 
-    i += 1
 
-#print(br[0])
+    #do insert | faz o insert das info. novas
+    sql = "INSERT INTO listas (nomes, link, data ) VALUES (%s, %s, %s)"
+
+    x=0
+    while x < len( linkX ):
+        val.append( "("+nomes, url, datas [ x ] +")" )
+        i+=1
+    print("")
+    print(val)
+
+#    dBase.executemany(sql, val)
+#    mydb.commit()
+#    print(dBase.rowcount, "was inserted.")
+#    dBaseClose()
+    return 0
+
+def checkDados():
+    dBase.execute( 'SELECT link FROM listas ORDER BY id DESC LIMIT 1;' )
+    myresult = dBase.fetchall()
+    for x in myresult:
+          print(x)
+    dBaseClose()
+    return myresult
+
+
+
+default_result = tarDefault()
+links = default_result[1]
+datas = default_result[0]
+
+nomes_lista = getNomes(links,datas)
+
+
+print("Nomes Lista")
+print (nomes_lista)
+
+print("Links")
+print (links)
+
+print("Datas")
+print (datas)
+
+
+#prev_result = checkDados()
+
+#Whats()
+
+
+
+
+
+
+
 
 
 
