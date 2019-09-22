@@ -8,8 +8,8 @@ from selenium.webdriver.support import expected_conditions as expectedCondition
 
 import re
 import time
-import mysql.connector
-from dataB.dbCon import mydb,dBase,dBaseClose
+
+from dataB.pysql import insertFila,getFila,connect
 
 #Pavadinimas - Title
 #Institucijos suteiktas nr. - Authority issued no.
@@ -43,7 +43,7 @@ def tarDefault():
     elem.send_keys("pilietybę Brazilijoje" + Keys.RETURN)
 
         # selenium sleep driverName + time or it waits untill  expected condition is met - Tempo de espera do Selenium Nome do driver+tempo ou espera a condicao ser atendida
-    WebDriverWait(browser, 7).until(expectedCondition.presence_of_element_located((By. XPATH, "//div[@class='table-content-inner']")))
+    WebDriverWait(browser, 5).until(expectedCondition.presence_of_element_located((By. XPATH, "//div[@class='table-content-inner']")))
 
     #printa NR + data no terminal da pagina mais recente  ex.Lnk + 1V-860 + data YYYY-MM-DD
     # link | Issued No. | Date
@@ -51,28 +51,38 @@ def tarDefault():
     WebDriverWait(browser,7 ).until(expectedCondition.presence_of_element_located((By. XPATH, "//div[@class = 'table-row']")))
 
     for a in browser.find_elements_by_xpath("//div[@class = 'table-row']"):
-        datas.append( re.search(r'[\d][\d][\d][\d[\d][-][\d][\d][-][\d][\d]',a.text).group(0) )
+        datas.append( re.search(r'[\d][\d][\d][\d][-][\d][\d][-][\d][\d]',a.text).group(0) )
 
-    #Localiza links da pagina mais recente
-    for c in browser.find_elements_by_xpath('.//a'):
-        links = re.findall("[^=]+[0-9]+[a-z0-9]*",c.get_attribute('href'))
+#    print(datas)
+
+    #search for links os the most recent page | Localiza links da pagina mais recente
+
+    link = browser.find_elements_by_xpath("//a[@href]")
+    for lnk in link:
+        links.append( re.findall("[^=]+[0-9]+[a-z0-9]*",lnk.get_attribute('href') ) )
+
+#    print(links)
 
     #Find All links (* element(S) - element get only the first occurrence)
     #browser.find_element_by_xpath('.//a').click()
 
     raw_data = datas,links
-
     return raw_data
 
 
 
-#Get all brazilians names/ Family names from the list | coleta os nomes brasileiros da lista
+#Get all brazilians names from the list | coleta os nomes de brasileiros da lista
 def getNomes(links,data):
+        global BASE_URL
 
-    for url in links:
-        browser.get(BASE_URL + "/rs/legalact/" + url)
+#    for url in links:
+        browser.get(BASE_URL + "/rs/legalact/" + str(links[0][0]))
+        print(links[0][0])
+#        browser.get(BASE_URL + "/rs/legalact/" + url[0])
+#        print(url)
 
         texto=[];listaBR=[];nomes_tmp=[]
+
         for elem in browser.find_elements(By.CLASS_NAME,"MsoNormal"):
             texto.append( elem.text )
         i = 0
@@ -85,16 +95,19 @@ def getNomes(links,data):
 
         while i < len(listaBR):
            nomes_tmp.append( listaBR[i][0] )
-#           print( listaBR[i][0].split(',') )
 #           print( nomes_tmp )
            i += 1
         nomes_lista.append(nomes_tmp)
 
-    return nomes_lista
+        print("Nomes Lista ")
+        print (*nomes_lista[0],sep='\n')
 
 
-def insertDados(link,datas):
-#def insertDados():
+        return nomes_lista
+
+
+#def insertDados(link,datas):
+def insertDados():
     link = []
     nomes = []
 
@@ -105,7 +118,8 @@ def insertDados(link,datas):
     print(lastDataDB)
     nomes = getNomes()
 
-    #compare link with the las link on DB | compara link com ultimo link no BD
+#    compare link with the lats link on DB | compara link com ultimo link no BD
+
 #    for x in datas:
 #        if str( lastDataDB ) > str( x ):
 #            continue
@@ -113,7 +127,7 @@ def insertDados(link,datas):
 #            link.append( datas.index( x ) )
 
 
-    #do insert | faz o insert das info. novas
+    #insert New info | faz o insert das info. novas
     sql = "INSERT INTO listas (nomes, link, data ) VALUES (%s, %s, %s)"
 
     x=0
@@ -146,12 +160,21 @@ datas = default_result[0]
 nomes_lista = getNomes(links,datas)
 
 
-print("Nomes Lista")
-print (nomes_lista)
+print("")
+print("")
 
+#for x in range(len(nomes_lista[0])):
+#    print(nomes_lista[x])
+
+
+
+print("")
+print("")
 print("Links")
 print (links)
 
+print("")
+print("")
 print("Datas")
 print (datas)
 
