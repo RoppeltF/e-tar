@@ -95,7 +95,7 @@ def tarDefault():
 #Get all brazilians names from the list | coleta os nomes de brasileiros da lista
 def getNomes(links,data):
         global BASE_URL
-        for url in links[0:4]:
+        for url in links[0:3]:
 #        browser.get(BASE_URL + "/rs/legalact/" + str(links[0][0]))
             browser.get( BASE_URL + "/rs/legalact/" + url[0] )
 
@@ -194,23 +194,31 @@ print(nomes)
 print(len(nomes))
 print("")
 
-
 x=0 
 
-DLN = []
+DLN = {}
 
-while( x < len(datas) ):
-    DLN.setdefault(datas[x], []).append({links[x]:nomes[x]})
+while( x < len(nomes) ):
+    DLN.setdefault(datas[x], []).append( [ {links[x][0]:nomes[x]} ] )
+    x+=1 
+    
+#while( x < len(nomes) ):
+#    print(datas[x])
+#    print(links[x][0])
+#    print(len(nomes))
+#    print(x)
+#    print("")
+#    x+=1
+#print(nomes)
 
-#    dateLink.setdefault(datas[x],[]).append(nomes[0])
-    x += 1
-
-data, url = DLN.items()[0]             
+#data, url = DLN.items()[0]             
 
 print("Dict datas - link : nomes")
-#print(dateLinkNomes)
-print("The 1st key of dictionary is : " + str(data)) 
-print("The 1st value of dictionary is : " + str(url)) 
+print(DLN)
+asd = DLN[datas[0]]
+print("")
+print("The 1st key of dictionary is : " + str(asd ) )
+#print("The 1st value of dictionary is : " + str( DLN[datas[0][0] ) ) 
 
 
 #print("Data da(s) ultima(s) lista(s) " + datas[0] + "total de BR's:  " + str(len(nomes)) )
@@ -229,6 +237,22 @@ print("The 1st value of dictionary is : " + str(url))
 
 
 #prev_result = checkDados()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
