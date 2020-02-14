@@ -199,7 +199,7 @@ x=0
 DLN = {}
 
 while( x < len(nomes) ):
-    DLN.setdefault(datas[x], []).append( [ {links[x][0]:nomes[x]} ] )
+    DLN.setdefault(datas[x], []).append( {links[x][0]:nomes[x]}  )
     x+=1 
     
 #while( x < len(nomes) ):
@@ -215,9 +215,9 @@ while( x < len(nomes) ):
 
 print("Dict datas - link : nomes")
 print(DLN)
-asd = DLN[datas[0]]
 print("")
-print("The 1st key of dictionary is : " + str(asd ) )
+print( DLN['2020-02-07'][0]['6d99d2e0496a11ea8895faf9aa6b1770'] )
+#print("The 1st key of dictionary is : " + str(asd ) )
 #print("The 1st value of dictionary is : " + str( DLN[datas[0][0] ) ) 
 
 
