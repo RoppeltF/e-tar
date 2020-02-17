@@ -63,12 +63,12 @@ def tarDefault():
     elem.send_keys("pilietybę Brazilijoje" + Keys.RETURN)
 
     # selenium sleep driverName + time or it waits untill  expected condition is met - Tempo de espera do Selenium Nome do driver+tempo ou espera a condicao ser atendida
-    WebDriverWait(browser, 10).until(expectedCondition.presence_of_element_located((By. XPATH, "//div[@class='table-content-inner']")))
+    WebDriverWait(browser, 20).until(expectedCondition.presence_of_element_located((By. XPATH, "//div[@class='table-content-inner']")))
 
     #printa NR + data no terminal da pagina mais recente  ex.Lnk + 1V-860 + data YYYY-MM-DD
     # link | Issued No. | Date
 
-    WebDriverWait(browser, 10).until(expectedCondition.presence_of_element_located((By. XPATH, "//div[@class = 'table-row']")))
+#    WebDriverWait(browser, 20).until(expectedCondition.presence_of_element_located((By. XPATH, "//div[@class = 'table-row']")))
 
     for a in browser.find_elements_by_xpath("//div[@class = 'table-row']"):
         datas.append( re.search(r'[\d][\d][\d][\d][-][\d][\d][-][\d][\d]',a.text).group(0) )
@@ -95,7 +95,7 @@ def tarDefault():
 #Get all brazilians names from the list | coleta os nomes de brasileiros da lista
 def getNomes(links,data):
         global BASE_URL
-        for url in links[0:3]:
+        for url in links:
 #        browser.get(BASE_URL + "/rs/legalact/" + str(links[0][0]))
             browser.get( BASE_URL + "/rs/legalact/" + url[0] )
 
@@ -182,7 +182,7 @@ nomes = nomes_lista
 
 
 print("Links")
-print(links)
+#print(links)
 print(len(links))
 print("")
 print("Datas")
@@ -190,33 +190,53 @@ print(datas)
 print(len(datas))
 print("")
 print("Nomes")
-print(nomes)
+#print(nomes)
 print(len(nomes))
+print("")
 print("")
 
 x=0 
 
 DLN = {}
 
-while( x < len(nomes) ):
+while( x < len(datas) ):
     DLN.setdefault(datas[x], []).append( {links[x][0]:nomes[x]}  )
     x+=1 
-    
-#while( x < len(nomes) ):
-#    print(datas[x])
-#    print(links[x][0])
-#    print(len(nomes))
-#    print(x)
-#    print("")
-#    x+=1
-#print(nomes)
 
-#data, url = DLN.items()[0]             
 
+#print("")
+#print("")
 print("Dict datas - link : nomes")
 print(DLN)
+#print( len(DLN) )
 print("")
-print( DLN['2020-02-07'][0]['6d99d2e0496a11ea8895faf9aa6b1770'] )
+print("")
+
+
+odt=0
+x=len(datas)
+i=0
+while i < x:
+    print( str(datas[i]) + " - " + str(links[i][0]) )
+    print( nomes[i] )
+    i += 1
+
+    
+
+#for dt in datas:
+#    print(dt)
+#    if dt == odt:
+#        print(  datas[x]  +" - "+ str( DLN[dt][ln] ) )
+#        x+=1 
+#        ln+=1
+#    else:
+#        ln=0
+#        print(  datas[x]  +" - "+ str( DLN[dt][ln] ) )
+#        x+=1
+#    odt = dt
+
+
+
 #print("The 1st key of dictionary is : " + str(asd ) )
 #print("The 1st value of dictionary is : " + str( DLN[datas[0][0] ) ) 
 
@@ -237,22 +257,4 @@ print( DLN['2020-02-07'][0]['6d99d2e0496a11ea8895faf9aa6b1770'] )
 
 
 #prev_result = checkDados()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
