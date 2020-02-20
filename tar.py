@@ -181,60 +181,45 @@ nomes_lista = getNomes(links,datas)
 nomes = nomes_lista
 
 
-print("Links")
-#print(links)
-print(len(links))
-print("")
-print("Datas")
-print(datas)
-print(len(datas))
-print("")
-print("Nomes")
-#print(nomes)
-print(len(nomes))
-print("")
-print("")
+#print("Links \n"+ links +"\n"+len(links) )
+#print("")
+#print("Datas \n"+ datas +"\n"+len(datas) )
+#print("")
+#print("Nomes \n"+ nomes +"\n"+len(nomes) )
+#print("")
 
-x=0 
-
-DLN = {}
-
-while( x < len(datas) ):
-    DLN.setdefault(datas[x], []).append( {links[x][0]:nomes[x]}  )
-    x+=1 
+#x=0 
+#DLN = {}
+#while( x < len(datas) ):
+#    DLN.setdefault(datas[x], []).append( {links[x][0]:nomes[x]}  )
+#    x+=1 
 
 
 #print("")
+#print("Dict datas - link : nomes")
+#print(DLN)
 #print("")
-print("Dict datas - link : nomes")
-print(DLN)
+
+#x=l=n=""
+#for x in datas:
+#    for l in links[x][0]:
+#        while n < len(nomes):
+#          print(DLN[x][l][n] )
+
+
+#DLN.setdefault(datas[x], []).append( {links[x][0]:nomes[x]}  )
 #print( len(DLN) )
-print("")
-print("")
 
-
-odt=0
-x=len(datas)
-i=0
-while i < x:
-    print( str(datas[i]) + " - " + str(links[i][0]) )
-    print( nomes[i] )
+j=i=0
+while i < len(nomes):
+    print( str(datas[i]) + " - " + BASE_URL + "/rs/legalact/" + str(links[i][0]) )
+    j=0
+    while j < len(nomes[i]):
+        print( nomes[i][j] )
+        j+=1
     i += 1
-
+    print("")
     
-
-#for dt in datas:
-#    print(dt)
-#    if dt == odt:
-#        print(  datas[x]  +" - "+ str( DLN[dt][ln] ) )
-#        x+=1 
-#        ln+=1
-#    else:
-#        ln=0
-#        print(  datas[x]  +" - "+ str( DLN[dt][ln] ) )
-#        x+=1
-#    odt = dt
-
 
 
 #print("The 1st key of dictionary is : " + str(asd ) )
